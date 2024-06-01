@@ -1,0 +1,17 @@
+{
+  "canisters": {
+    "ckMatic_backend": {
+      "candid": "src/ckMatic_backend/ckMatic_backend.did",
+      "package": "ckMatic_backend",
+      "type": "rust"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
