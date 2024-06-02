@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "src/ckMatic_backend"
+    "src/ic_matic"
 ]
 resolver = "2"

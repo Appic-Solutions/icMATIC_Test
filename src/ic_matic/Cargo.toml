@@ -1,5 +1,5 @@
 [package]
-name = "ckMatic_backend"
+name = "ic_matic"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,3 +12,15 @@ crate-type = ["cdylib"]
 candid = "0.10"
 ic-cdk = "0.13"
 ic-cdk-timers = "0.7" # Feel free to remove this dependency if you don't need timers
+serde = "1.0.203"
+minicbor = "=0.19.1"
+k256 = "0.13.3"
+getrandom = { version = "0.2", features = ["custom"] }
+rand = "=0.8.5"
+zeroize = "1.7.0"
+lazy_static = "1.4.0"
+simple_asn1 = "0.6.2"
+num-bigint = "0.4.5"
+pem = "=1.1.1"
+hex = "0.4.3"
+sha3 = "=0.9.1"

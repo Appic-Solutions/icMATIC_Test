@@ -1,8 +1,8 @@
 {
   "canisters": {
     "ckMatic_backend": {
-      "candid": "src/ckMatic_backend/ckMatic_backend.did",
-      "package": "ckMatic_backend",
+      "candid": "src/ic_matic/ic_matic.did",
+      "package": "ic_matic",
       "type": "rust"
     }
   },
