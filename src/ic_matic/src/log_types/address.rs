@@ -1,18 +1,12 @@
-use crate::ic_crypto_sha3;
-// use minicbor::{Decode, Encode};
+use minicbor::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::fmt::{Formatter, LowerHex, UpperHex};
+use std::fmt::{Debug, Display, Formatter, LowerHex, UpperHex};
 use std::str::FromStr;
+
 /// An Ethereum account address.
-#[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(transparent)]
-// #[cbor(transparent)]
-pub struct Address(
-    // #[serde(with = "crate::serde_data")]
-    // #[cbor(n(0), with = "minicbor::bytes")]
-    [u8; 20],
-);
+#[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Address([u8; 20]);
 
 impl AsRef<[u8]> for Address {
     fn as_ref(&self) -> &[u8] {
@@ -118,3 +112,6 @@ impl fmt::Display for Address {
 fn keccak(bytes: &[u8]) -> [u8; 32] {
     ic_crypto_sha3::Keccak256::hash(bytes)
 }
+
+
+

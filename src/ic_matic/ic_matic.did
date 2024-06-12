@@ -1,1 +1,79 @@
-service : { getEthAddress : () -> (text); greet : (text) -> (text) query }
+type EthMainnetService = variant {
+  Alchemy;
+  BlockPi;
+  Cloudflare;
+  PublicNode;
+  Ankr;
+};
+type GetLogsResult = variant { Ok : vec LogEntry; Err : RpcError };
+type HttpHeader = record { value : text; name : text };
+type HttpOutcallError = variant {
+  IcError : record { code : RejectionCode; message : text };
+  InvalidHttpJsonRpcResponse : record {
+    status : nat16;
+    body : text;
+    parsingError : opt text;
+  };
+};
+type JsonRpcError = record { code : int64; message : text };
+type L2MainnetService = variant { Alchemy; BlockPi; PublicNode; Ankr };
+type LogEntry = record {
+  transactionHash : opt text;
+  blockNumber : opt nat;
+  data : text;
+  blockHash : opt text;
+  transactionIndex : opt nat;
+  topics : vec text;
+  address : text;
+  logIndex : opt nat;
+  removed : bool;
+};
+type MultiGetLogsResult = variant {
+  Consistent : GetLogsResult;
+  Inconsistent : vec record { RpcService; GetLogsResult };
+};
+type ProviderError = variant {
+  TooFewCycles : record { expected : nat; received : nat };
+  MissingRequiredProvider;
+  ProviderNotFound;
+  NoPermission;
+};
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
+};
+type Result = variant {
+  Ok : record { MultiGetLogsResult };
+  Err : record { RejectionCode; text };
+};
+type RpcApi = record { url : text; headers : opt vec HttpHeader };
+type RpcError = variant {
+  JsonRpcError : JsonRpcError;
+  ProviderError : ProviderError;
+  ValidationError : ValidationError;
+  HttpOutcallError : HttpOutcallError;
+};
+type RpcService = variant {
+  EthSepolia : L2MainnetService;
+  BaseMainnet : L2MainnetService;
+  Custom : RpcApi;
+  OptimismMainnet : L2MainnetService;
+  ArbitrumOne : L2MainnetService;
+  EthMainnet : EthMainnetService;
+  Chain : nat64;
+  Provider : nat64;
+};
+type ValidationError = variant {
+  CredentialPathNotAllowed;
+  HostNotAllowed : text;
+  CredentialHeaderNotAllowed;
+  UrlParseError : text;
+  Custom : text;
+  InvalidHex : text;
+};
+service : { get_logs : (nat) -> (Result) }

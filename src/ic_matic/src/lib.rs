@@ -1,43 +1,46 @@
-mod address;
-mod ecdsa_secp256k1;
-mod edsa;
-mod eth_types;
-mod ic_crypto_sha3;
-use crate::address::ecdsa_public_key_to_address;
-use crate::eth_types::Address;
+mod evm_rpc_canister;
+mod state;
+mod log_types;
+mod rpc_providers;
+mod checked_amount;
+pub mod numeric;
+mod events_utils;
+use candid::candid_method;
 use candid::CandidType;
-use ecdsa_secp256k1::PublicKey;
-use edsa::get_public_key;
-use ic_cdk::{
-    api::management_canister::ecdsa::{ecdsa_public_key, EcdsaPublicKeyResponse},
-    post_upgrade, pre_upgrade, println, query, update,
+use evm_rpc_canister::EthSepoliaService;
+use evm_rpc_canister::MultiGetLogsResult;
+use evm_rpc_canister::{
+    BlockTag, EmvRpcService, GetLogsArgs, GetLogsResult, RpcApi, RpcConfig, RpcError, RpcService,
+    RpcServices,
 };
-
-#[query]
-fn greet(name: String) -> String {
-    format!("Hello, {}!", name)
-}
+use ic_cdk::api::call::RejectionCode;
+use ic_cdk::api::management_canister::http_request::{HttpResponse, TransformArgs};
+use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
+use serde::{Deserialize, Serialize};
+// use minter::polygon_rpc_client::{providers, PolygonRPCWorker};
 
 #[update]
-async fn getEthAddress() -> String {
-    // get treshold ecdsa public key
-    let ecdsa_public_key = get_public_key().await;
-    let ethAddress = ecdsa_public_key_to_address(&ecdsa_public_key);
-    println!("Public key{:?}", ethAddress);
+async fn get_logs(cycles: u128) -> Result<(MultiGetLogsResult,), (RejectionCode, String)> {
+    let sepolia_services: RpcServices = RpcServices::Custom {
+        chainId: 8002,
+        services: vec![RpcApi {
+            url: "".to_string(),
+            headers: Some(vec![]),
+        }],
+    };  
+    let get_logs_args: GetLogsArgs = GetLogsArgs {
+        fromBlock: Some(BlockTag::Number(272851)),
+        toBlock: Some(BlockTag::Latest),
+        addresses: vec!["0x0e2e8f489927b62725ae65ecb2c3ed410701a337".to_string()],
+        topics: None,
+    };
+    let log_results = EmvRpcService
+        .eth_get_logs(sepolia_services, None, get_logs_args, cycles)
+        .await;
 
-    return ethAddress.to_string();
+    match log_results {
+        Ok(data) => Ok(data),
+        Err(error) => return Err(error),
+    }
 }
-
-// In the following, we register a custom getrandom implementation because
-// otherwise getrandom (which is a dependency of k256) fails to compile.
-// This is necessary because getrandom by default fails to compile for the
-// wasm32-unknown-unknown target (which is required for deploying a canister).
-// Our custom implementation always fails, which is sufficient here because
-// we only use the k256 crate for verifying secp256k1 signatures, and such
-// signature verification does not require any randomness.
-getrandom::register_custom_getrandom!(always_fail);
-pub fn always_fail(_buf: &mut [u8]) -> Result<(), getrandom::Error> {
-    Err(getrandom::Error::UNSUPPORTED)
-}
-
 ic_cdk::export_candid!();
