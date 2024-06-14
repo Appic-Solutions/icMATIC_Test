@@ -4,6 +4,9 @@ use std::marker::PhantomData;
 use std::num::ParseIntError;
 use std::ops::Rem;
 
+use candid::CandidType;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
 /// `CheckedAmountOf<Unit>` provides a type-safe way to keep an amount of some `Unit`.
 /// In contrast to `AmountOf<Unit>`, all operations are checked and do not overflow.
 
@@ -196,5 +199,25 @@ impl<Unit> PartialOrd for CheckedAmountOf<Unit> {
 impl<Unit> Ord for CheckedAmountOf<Unit> {
     fn cmp(&self, rhs: &Self) -> Ordering {
         self.0.cmp(&rhs.0)
+    }
+}
+
+// Derived serde `impl Serialize` produces an extra `unit` value for
+// phantom data, e.g. `AmountOf::<Meters>::from(10)` is serialized
+// into json as `[10, null]` by default.
+//
+// We want serialization format of `Repr` and the `AmountOf` to match
+// exactly, that's why we have to provide custom instances.
+
+impl<Unit> Serialize for CheckedAmountOf<Unit> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_u128(self.0.as_u128())
+    }
+}
+
+impl<'de, Unit> Deserialize<'de> for CheckedAmountOf<Unit> {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = u128::deserialize(deserializer)?;
+        Ok(Self(ethnum::u256::from(value), PhantomData))
     }
 }

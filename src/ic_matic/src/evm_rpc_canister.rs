@@ -86,7 +86,7 @@ pub struct FeeHistoryArgs {
     pub rewardPercentiles: Option<serde_bytes::ByteBuf>,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Debug, Deserialize)]
 pub struct FeeHistory {
     pub reward: Vec<Vec<u128>>,
     pub gasUsedRatio: Vec<f64>,
@@ -94,13 +94,13 @@ pub struct FeeHistory {
     pub baseFeePerGas: Vec<u128>,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Debug, Deserialize)]
 pub struct JsonRpcError {
     pub code: i64,
     pub message: String,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Debug, Deserialize)]
 pub enum ProviderError {
     TooFewCycles { expected: u128, received: u128 },
     MissingRequiredProvider,
@@ -108,7 +108,7 @@ pub enum ProviderError {
     NoPermission,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Debug, Deserialize)]
 pub enum ValidationError {
     CredentialPathNotAllowed,
     HostNotAllowed(String),
@@ -118,7 +118,7 @@ pub enum ValidationError {
     InvalidHex(String),
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Debug, Deserialize)]
 pub enum RejectionCode {
     NoError,
     CanisterError,
@@ -129,7 +129,7 @@ pub enum RejectionCode {
     CanisterReject,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Debug, Deserialize)]
 pub enum HttpOutcallError {
     IcError {
         code: RejectionCode,
@@ -142,7 +142,7 @@ pub enum HttpOutcallError {
     },
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Debug, Deserialize)]
 pub enum RpcError {
     JsonRpcError(JsonRpcError),
     ProviderError(ProviderError),
@@ -220,7 +220,7 @@ pub struct GetLogsArgs {
     pub topics: Option<Vec<Topic>>,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Debug, Deserialize)]
 pub struct LogEntry {
     pub transactionHash: Option<String>,
     pub blockNumber: Option<u128>,
@@ -233,7 +233,7 @@ pub struct LogEntry {
     pub removed: bool,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Debug, Deserialize)]
 pub enum GetLogsResult {
     Ok(Vec<LogEntry>),
     Err(RpcError),

@@ -1,5 +1,6 @@
-use candid::Principal;
+use candid::{CandidType, Principal};
 use minicbor::{Decode, Encode};
+use serde::Serialize;
 use std::{
     convert::{TryFrom, TryInto},
     fmt,
@@ -9,11 +10,7 @@ use std::{
 use crate::{
     checked_amount::CheckedAmountOf,
     evm_rpc_canister::LogEntry,
-    log_types::{
-        address::{Address, FixedSizeData},
-        data::FixedSizeData,
-        hash::Hash,
-    },
+    log_types::{address::Address, data::FixedSizeData, hash::Hash},
     numeric::{BlockNumber, LogIndex, Wei},
 };
 
@@ -31,7 +28,7 @@ impl fmt::Display for EventSource {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct ReceivedPolygonEvent {
     pub transaction_hash: Hash,
     pub block_number: BlockNumber,
@@ -50,6 +47,7 @@ impl ReceivedPolygonEvent {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ReceivedEventError {
     PendingLogEntry,
     InvalidEventSource {
@@ -76,7 +74,7 @@ impl TryFrom<LogEntry> for ReceivedPolygonEvent {
         let transaction_hash = entry
             .transactionHash
             .ok_or(ReceivedEventError::PendingLogEntry)?;
-        let _transaction_index = entry
+        let _transaction_indexSerialize = entry
             .transactionIndex
             .ok_or(ReceivedEventError::PendingLogEntry)?;
         let log_index = entry.logIndex.ok_or(ReceivedEventError::PendingLogEntry)?;
@@ -126,71 +124,45 @@ impl TryFrom<LogEntry> for ReceivedPolygonEvent {
             }
         })?;
 
-        // We have 3 indexed topics for ETH events: (hash, from_address, principal),
+        // We have 3 indexed topics for ETH events: (hash, from_address, principal) and they need to be extracted,
         // TODO: Converts topics from String to FixedSizedData
 
-        // match entry.topics[0] {
-        //     FixedSizeData(crate::deposit::RECEIVED_ETH_EVENT_TOPIC) => {
-        //         if entry.topics.len() != 3 {
-        //             return Err(ReceivedEventError::InvalidEventSource {
-        //                 source: event_source,
-        //                 error: EventSourceError::InvalidEvent(format!(
-        //                     "Expected 3 topics for ReceivedEth event, got {}",
-        //                     entry.topics.len()
-        //                 )),
-        //             });
-        //         };
-        //         let from_address = parse_address(&entry.topics[1])?;
-        //         let principal = parse_principal(&entry.topics[2])?;
-        //         Ok(ReceivedEthEvent {
-        //             transaction_hash,
-        //             block_number,
-        //             log_index,
-        //             from_address,
-        //             value: Wei::from_be_bytes(value_bytes),
-        //             principal,
-        //         }
-        //         .into())
-        //     }
-        //     FixedSizeData(crate::deposit::RECEIVED_ERC20_EVENT_TOPIC) => {
-        //         if entry.topics.len() != 4 {
-        //             return Err(ReceivedEventError::InvalidEventSource {
-        //                 source: event_source,
-        //                 error: EventSourceError::InvalidEvent(format!(
-        //                     "Expected 4 topics for ReceivedERC20 event, got {}",
-        //                     entry.topics.len()
-        //                 )),
-        //             });
-        //         };
-        //         let erc20_contract_address = parse_address(&entry.topics[1])?;
-        //         let from_address = parse_address(&entry.topics[2])?;
-        //         let principal = parse_principal(&entry.topics[3])?;
-        //         Ok(ReceivedErc20Event {
-        //             transaction_hash,
-        //             block_number,
-        //             log_index,
-        //             from_address,
-        //             value: Erc20Value::from_be_bytes(value_bytes),
-        //             principal,
-        //             erc20_contract_address,
-        //         }
-        //         .into())
-        //     }
-        //     _ => Err(ReceivedEventError::InvalidEventSource {
-        //         source: event_source,
-        //         error: EventSourceError::InvalidEvent(format!(
-        //             "Expected either ReceivedEth or ReceivedERC20 topics, got {}",
-        //             entry.topics[0]
-        //         )),
-        //     }),
-        // }
+        match entry.topics[0].as_str() {
+            "0x4d84986cd718ed41155c024ee6c78a9396f89afed335ee4cb0713996744b49ee" => {
+                if entry.topics.len() != 3 {
+                    return Err(ReceivedEventError::InvalidEventSource {
+                        source: event_source,
+                        error: EventSourceError::InvalidEvent(format!(
+                            "Expected 3 topics for ReceivedEth event, got {}",
+                            entry.topics.len()
+                        )),
+                    });
+                };
+                let from_address =
+                    parse_address(&FixedSizeData::from_str(&entry.topics[1]).unwrap())?;
+                let principal =
+                    parse_principal(&FixedSizeData::from_str(&entry.topics[1]).unwrap())?;
+                Ok(ReceivedPolygonEvent {
+                    transaction_hash: Hash::from_str(&transaction_hash).unwrap(),
+                    block_number: BlockNumber::new(block_number),
+                    log_index: LogIndex::new(log_index),
+                    from_address,
+                    value: Wei::from_be_bytes(value_bytes.0),
+                    principal,
+                }
+                .into())
+            }
+
+            _ => Err(ReceivedEventError::InvalidEventSource {
+                source: event_source,
+                error: EventSourceError::InvalidEvent(format!(
+                    "Expected either ReceivedPolygon, got {}",
+                    entry.topics[0]
+                )),
+            }),
+        }
     }
 }
-
-
-
-
-
 
 /// Decode a candid::Principal from a slice of at most 32 bytes
 /// encoded as follows

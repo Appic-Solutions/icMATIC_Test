@@ -1,12 +1,13 @@
-mod evm_rpc_canister;
-mod state;
-mod log_types;
-mod rpc_providers;
 mod checked_amount;
-pub mod numeric;
 mod events_utils;
+mod evm_rpc_canister;
+mod log_types;
+pub mod numeric;
+mod rpc_providers;
+mod state;
 use candid::candid_method;
 use candid::CandidType;
+use events_utils::ReceivedPolygonEvent;
 use evm_rpc_canister::EthSepoliaService;
 use evm_rpc_canister::MultiGetLogsResult;
 use evm_rpc_canister::{
@@ -17,17 +18,13 @@ use ic_cdk::api::call::RejectionCode;
 use ic_cdk::api::management_canister::http_request::{HttpResponse, TransformArgs};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
 use serde::{Deserialize, Serialize};
+use serde_json::to_string_pretty;
 // use minter::polygon_rpc_client::{providers, PolygonRPCWorker};
 
 #[update]
-async fn get_logs(cycles: u128) -> Result<(MultiGetLogsResult,), (RejectionCode, String)> {
-    let sepolia_services: RpcServices = RpcServices::Custom {
-        chainId: 8002,
-        services: vec![RpcApi {
-            url: "".to_string(),
-            headers: Some(vec![]),
-        }],
-    };  
+async fn get_logs(cycles: u128) -> Result<String, String> {
+    let sepolia_services: RpcServices =
+        RpcServices::EthSepolia(Some(vec![EthSepoliaService::Alchemy]));
     let get_logs_args: GetLogsArgs = GetLogsArgs {
         fromBlock: Some(BlockTag::Number(272851)),
         toBlock: Some(BlockTag::Latest),
@@ -36,11 +33,30 @@ async fn get_logs(cycles: u128) -> Result<(MultiGetLogsResult,), (RejectionCode,
     };
     let log_results = EmvRpcService
         .eth_get_logs(sepolia_services, None, get_logs_args, cycles)
-        .await;
+        .await
+        .unwrap();
 
+    let mut log_entries: Vec<ReceivedPolygonEvent> = Vec::new();
     match log_results {
-        Ok(data) => Ok(data),
-        Err(error) => return Err(error),
+        (MultiGetLogsResult::Consistent(consistent_data),) => match consistent_data {
+            GetLogsResult::Ok(logEntries) => {
+                for logEntry in logEntries {
+                    let new_log_entry: Result<
+                        ReceivedPolygonEvent,
+                        events_utils::ReceivedEventError,
+                    > = ReceivedPolygonEvent::try_from(logEntry);
+                    log_entries.push(new_log_entry.unwrap());
+                }
+                let json = to_string_pretty(&log_entries).unwrap();
+                return Ok(json);
+            }
+            GetLogsResult::Err(error) => Err(format!("rpc error,{:?}", error).to_string()),
+        },
+
+        (MultiGetLogsResult::Inconsistent(inconsistent_data),) => {
+            Ok("Inconsistent data".to_string())
+        }
     }
 }
+
 ic_cdk::export_candid!();

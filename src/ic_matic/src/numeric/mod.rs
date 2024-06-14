@@ -1,9 +1,11 @@
 use crate::checked_amount::CheckedAmountOf;
+use candid::CandidType;
 use phantom_newtype::Id;
 
 pub enum WeiTag {}
-pub type Wei = CheckedAmountOf<WeiTag>;
 
+
+pub type Wei = CheckedAmountOf<WeiTag>;
 
 /// Amount of CK token using their smallest denomination.
 // pub enum CkTokenAmountTag {}
@@ -40,6 +42,7 @@ pub type BlockNumber = CheckedAmountOf<BlockNumberTag>;
 pub enum GasUnit {}
 /// The number of gas units attached to a transaction for execution.
 pub type GasAmount = CheckedAmountOf<GasUnit>;
+
 
 pub enum EthLogIndexTag {}
 pub type LogIndex = CheckedAmountOf<EthLogIndexTag>;

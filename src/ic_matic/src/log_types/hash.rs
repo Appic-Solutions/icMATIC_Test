@@ -1,6 +1,9 @@
 use std::fmt::{Debug, Display, Formatter, LowerHex, UpperHex};
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
+use candid::CandidType;
+use serde::Serialize;
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd, CandidType, Serialize)]
 
 pub struct Hash(pub [u8; 32]);
 

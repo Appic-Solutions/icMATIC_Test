@@ -5,7 +5,7 @@ use std::fmt::{Debug, Display, Formatter, LowerHex, UpperHex};
 use std::str::FromStr;
 
 /// An Ethereum account address.
-#[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord,Serialize)]
 pub struct Address([u8; 20]);
 
 impl AsRef<[u8]> for Address {
