@@ -1,9 +1,9 @@
-use crate::checked_amount::CheckedAmountOf;
+pub mod checked_amount;
 use candid::CandidType;
+use checked_amount::CheckedAmountOf;
 use phantom_newtype::Id;
 
 pub enum WeiTag {}
-
 
 pub type Wei = CheckedAmountOf<WeiTag>;
 
@@ -42,7 +42,6 @@ pub type BlockNumber = CheckedAmountOf<BlockNumberTag>;
 pub enum GasUnit {}
 /// The number of gas units attached to a transaction for execution.
 pub type GasAmount = CheckedAmountOf<GasUnit>;
-
 
 pub enum EthLogIndexTag {}
 pub type LogIndex = CheckedAmountOf<EthLogIndexTag>;

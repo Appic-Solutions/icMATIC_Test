@@ -8,10 +8,10 @@ use std::{
 };
 
 use crate::{
-    checked_amount::CheckedAmountOf,
-    evm_rpc_canister::LogEntry,
     log_types::{address::Address, data::FixedSizeData, hash::Hash},
+    numeric::checked_amount::CheckedAmountOf,
     numeric::{BlockNumber, LogIndex, Wei},
+    polygon_rpc_clinet::evm_rpc_canister::LogEntry,
 };
 
 /// A unique identifier of the event source: the source transaction hash and the log

@@ -1,22 +1,20 @@
-mod checked_amount;
 mod events_utils;
-mod evm_rpc_canister;
 mod log_types;
 pub mod numeric;
+mod polygon_rpc_clinet;
 mod rpc_providers;
 mod state;
-use candid::candid_method;
-use candid::CandidType;
 use events_utils::ReceivedPolygonEvent;
-use evm_rpc_canister::EthSepoliaService;
-use evm_rpc_canister::MultiGetLogsResult;
-use evm_rpc_canister::{
-    BlockTag, EmvRpcService, GetLogsArgs, GetLogsResult, RpcApi, RpcConfig, RpcError, RpcService,
-    RpcServices,
-};
 use ic_cdk::api::call::RejectionCode;
 use ic_cdk::api::management_canister::http_request::{HttpResponse, TransformArgs};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
+use polygon_rpc_clinet::evm_rpc_canister::EthSepoliaService;
+use polygon_rpc_clinet::evm_rpc_canister::MultiGetLogsResult;
+use polygon_rpc_clinet::evm_rpc_canister::{
+    BlockTag, EmvRpcService, GetLogsArgs, GetLogsResult, RpcApi, RpcConfig, RpcError, RpcService,
+    RpcServices,
+};
+use polygon_rpc_clinet::EthRpcClient;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
 // use minter::polygon_rpc_client::{providers, PolygonRPCWorker};
@@ -59,4 +57,34 @@ async fn get_logs(cycles: u128) -> Result<String, String> {
     }
 }
 
+#[query]
+async fn get_cycles(resposne_estimate_size: u64) -> u128 {
+    let rpc_clinet = EthRpcClient {};
+    // return rpc_clinet::estimate_cycles(resposne_estimate_size);
+    let effective = rpc_clinet.effective_size_estimate(resposne_estimate_size);
+    let cycles = rpc_clinet.estimate_cycles(effective);
+    return cycles;
+}
+
+#[update]
+async fn get_block(
+    cycles: u128,
+) -> Result<
+    (polygon_rpc_clinet::evm_rpc_canister::MultiGetBlockByNumberResult,),
+    (RejectionCode, String),
+> {
+    let sepolia_services: RpcServices =
+        RpcServices::EthSepolia(Some(vec![EthSepoliaService::Alchemy]));
+    let rpc_config = RpcConfig {
+        responseSizeEstimate: Some(24 * 1204),
+    };
+    let block_tag = BlockTag::Finalized;
+    let block: Result<
+        (polygon_rpc_clinet::evm_rpc_canister::MultiGetBlockByNumberResult,),
+        (RejectionCode, String),
+    > = EmvRpcService
+        .eth_get_block_by_number(sepolia_services, Some(rpc_config), block_tag, cycles)
+        .await;
+    return block;
+}
 ic_cdk::export_candid!();

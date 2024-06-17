@@ -402,14 +402,21 @@ impl EmvRpcService {
     // ) -> Result<(MultiFeeHistoryResult,)> {
     //     ic_cdk::call(CANISTER_ID, "eth_feeHistory", (arg0, arg1, arg2)).await
     // }
-    // pub async fn eth_get_block_by_number(
-    //     &self,
-    //     arg0: RpcServices,
-    //     arg1: Option<RpcConfig>,
-    //     arg2: BlockTag,
-    // ) -> Result<(MultiGetBlockByNumberResult,)> {
-    //     ic_cdk::call(CANISTER_ID, "eth_getBlockByNumber", (arg0, arg1, arg2)).await
-    // }
+    pub async fn eth_get_block_by_number(
+        &self,
+        arg0: RpcServices,
+        arg1: Option<RpcConfig>,
+        arg2: BlockTag,
+        cycles: u128,
+    ) -> Result<(MultiGetBlockByNumberResult,)> {
+        ic_cdk::api::call::call_with_payment128(
+            CANISTER_ID,
+            "eth_getBlockByNumber",
+            (arg0, arg1, arg2),
+            cycles,
+        )
+        .await
+    }
     // pub async fn eth_get_transaction_count(
     //     &self,
     //     arg0: RpcServices,
@@ -469,14 +476,14 @@ impl EmvRpcService {
     // ) -> Result<(RequestResult,)> {
     //     ic_cdk::call(CANISTER_ID, "request", (arg0, arg1, arg2)).await
     // }
-    // pub async fn request_cost(
-    //     &self,
-    //     arg0: RpcService,
-    //     arg1: String,
-    //     arg2: u64,
-    // ) -> Result<(RequestCostResult,)> {
-    //     ic_cdk::call(CANISTER_ID, "requestCost", (arg0, arg1, arg2)).await
-    // }
+    pub async fn request_cost(
+        &self,
+        arg0: RpcService,
+        arg1: String,
+        arg2: u64,
+    ) -> Result<(RequestCostResult,)> {
+        ic_cdk::call(CANISTER_ID, "requestCost", (arg0, arg1, arg2)).await
+    }
     // pub async fn set_open_rpc_access(&self, arg0: bool) -> Result<()> {
     //     ic_cdk::call(CANISTER_ID, "setOpenRpcAccess", (arg0,)).await
     // }

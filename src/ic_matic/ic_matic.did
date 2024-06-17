@@ -1,2 +1,96 @@
-type Result = variant { Ok : text; Err : text };
-service : { get_logs : (nat) -> (Result) }
+type Block = record {
+  miner : text;
+  totalDifficulty : nat;
+  receiptsRoot : text;
+  stateRoot : text;
+  hash : text;
+  difficulty : nat;
+  size : nat;
+  uncles : vec text;
+  baseFeePerGas : nat;
+  extraData : text;
+  transactionsRoot : opt text;
+  sha3Uncles : text;
+  nonce : nat;
+  number : nat;
+  timestamp : nat;
+  transactions : vec text;
+  gasLimit : nat;
+  logsBloom : text;
+  parentHash : text;
+  gasUsed : nat;
+  mixHash : text;
+};
+type EthMainnetService = variant {
+  Alchemy;
+  BlockPi;
+  Cloudflare;
+  PublicNode;
+  Ankr;
+};
+type GetBlockByNumberResult = variant { Ok : Block; Err : RpcError };
+type HttpHeader = record { value : text; name : text };
+type HttpOutcallError = variant {
+  IcError : record { code : RejectionCode; message : text };
+  InvalidHttpJsonRpcResponse : record {
+    status : nat16;
+    body : text;
+    parsingError : opt text;
+  };
+};
+type JsonRpcError = record { code : int64; message : text };
+type L2MainnetService = variant { Alchemy; BlockPi; PublicNode; Ankr };
+type MultiGetBlockByNumberResult = variant {
+  Consistent : GetBlockByNumberResult;
+  Inconsistent : vec record { RpcService; GetBlockByNumberResult };
+};
+type ProviderError = variant {
+  TooFewCycles : record { expected : nat; received : nat };
+  MissingRequiredProvider;
+  ProviderNotFound;
+  NoPermission;
+};
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
+};
+type Result = variant {
+  Ok : record { MultiGetBlockByNumberResult };
+  Err : record { RejectionCode; text };
+};
+type Result_1 = variant { Ok : text; Err : text };
+type RpcApi = record { url : text; headers : opt vec HttpHeader };
+type RpcError = variant {
+  JsonRpcError : JsonRpcError;
+  ProviderError : ProviderError;
+  ValidationError : ValidationError;
+  HttpOutcallError : HttpOutcallError;
+};
+type RpcService = variant {
+  EthSepolia : L2MainnetService;
+  BaseMainnet : L2MainnetService;
+  Custom : RpcApi;
+  OptimismMainnet : L2MainnetService;
+  ArbitrumOne : L2MainnetService;
+  EthMainnet : EthMainnetService;
+  Chain : nat64;
+  Provider : nat64;
+};
+type ValidationError = variant {
+  CredentialPathNotAllowed;
+  HostNotAllowed : text;
+  CredentialHeaderNotAllowed;
+  UrlParseError : text;
+  Custom : text;
+  InvalidHex : text;
+};
+service : {
+  get_block : (nat) -> (Result);
+  get_cycles : (nat64) -> (nat) query;
+  get_logs : (nat) -> (Result_1);
+}

@@ -1,12 +1,16 @@
 use candid::Principal;
 use ethereum_types::Address;
 use ic_cdk::api::management_canister::ecdsa::EcdsaPublicKeyResponse;
-use std::{cell::RefCell, collections::{BTreeMap, BTreeSet, HashSet}, fmt::{Display, Formatter}};
+use std::{
+    cell::RefCell,
+    collections::{BTreeMap, BTreeSet, HashSet},
+    fmt::{Display, Formatter},
+};
 
 use crate::{
     events_utils::{EventSource, ReceivedPolygonEvent},
-    evm_rpc_canister::BlockTag,
     numeric::{BlockNumber, LedgerMintIndex, Wei},
+    polygon_rpc_clinet::evm_rpc_canister::BlockTag,
     rpc_providers::PolygonNetwork,
 };
 
@@ -26,7 +30,6 @@ impl MintedEvent {
         self.deposit_event.source()
     }
 }
-
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum InvalidStateError {
@@ -110,4 +113,21 @@ pub struct State {
     // pub last_transaction_price_estimate: Option<(u64, GasFeeEstimate)>,
 }
 
+// Read from state
+pub fn read_state<R>(f: impl FnOnce(&State) -> R) -> R {
+    STATE.with(|s| f(s.borrow().as_ref().expect("BUG: state is not initialized")))
+}
 
+/// Mutates (part of) the current state using `f`.
+///
+/// Panics if there is no state.
+pub fn mutate_state<F, R>(f: F) -> R
+where
+    F: FnOnce(&mut State) -> R,
+{
+    STATE.with(|s| {
+        f(s.borrow_mut()
+            .as_mut()
+            .expect("BUG: state is not initialized"))
+    })
+}
