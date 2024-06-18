@@ -58,11 +58,11 @@ async fn get_logs(cycles: u128) -> Result<String, String> {
 }
 
 #[query]
-async fn get_cycles(resposne_estimate_size: u64) -> u128 {
+async fn get_cycles_cost(resposne_estimate_size: u64) -> u128 {
     let rpc_clinet = EthRpcClient {};
     // return rpc_clinet::estimate_cycles(resposne_estimate_size);
     let effective = rpc_clinet.effective_size_estimate(resposne_estimate_size);
-    let cycles = rpc_clinet.estimate_cycles(effective);
+    let cycles = rpc_clinet.estimate_cycles(effective).await;
     return cycles;
 }
 
