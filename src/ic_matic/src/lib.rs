@@ -1,5 +1,5 @@
+mod eth_types;
 mod events_utils;
-mod log_types;
 pub mod numeric;
 mod polygon_rpc_clinet;
 mod rpc_providers;
@@ -57,15 +57,15 @@ async fn get_logs(cycles: u128) -> Result<String, String> {
     }
 }
 
-#[query]
+#[update]
 async fn get_cycles_cost(resposne_estimate_size: u64) -> u128 {
     let rpc_clinet = EthRpcClient {};
     // return rpc_clinet::estimate_cycles(resposne_estimate_size);
     let effective = rpc_clinet.effective_size_estimate(resposne_estimate_size);
-    let cycles = rpc_clinet.estimate_cycles(effective).await;
+    let cycles = rpc_clinet.estimate_cycles(effective, 1).await;
     return cycles;
 }
-
+//
 #[update]
 async fn get_block(
     cycles: u128,
@@ -87,4 +87,5 @@ async fn get_block(
         .await;
     return block;
 }
+
 ic_cdk::export_candid!();

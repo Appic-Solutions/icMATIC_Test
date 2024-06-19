@@ -91,6 +91,6 @@ type ValidationError = variant {
 };
 service : {
   get_block : (nat) -> (Result);
-  get_cycles : (nat64) -> (nat) query;
+  get_cycles_cost : (nat64) -> (nat);
   get_logs : (nat) -> (Result_1);
 }
